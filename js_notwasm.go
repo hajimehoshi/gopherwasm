@@ -17,6 +17,8 @@
 package js
 
 import (
+	"unsafe"
+
 	"github.com/gopherjs/gopherjs/js"
 )
 
@@ -54,7 +56,14 @@ type Value struct {
 }
 
 func ValueOf(x interface{}) Value {
-	return Value{v: js.InternalObject(x)}
+	switch x := x.(type) {
+	case Value:
+		return x
+	case nil, bool, int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, unsafe.Pointer, float32, float64, string, []byte:
+		return Value{v: js.InternalObject(x)}
+	default:
+		panic("invalid arg")
+	}
 }
 
 func (v Value) Bool() bool {
@@ -67,15 +76,16 @@ func convertArgs(args []interface{}) []interface{} {
 		switch arg := arg.(type) {
 		case Value:
 			newArgs = append(newArgs, arg.v)
-		default:
+		case nil, bool, int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, unsafe.Pointer, float32, float64, string, []byte:
 			newArgs = append(newArgs, arg)
+		default:
+			panic("invalid arg")
 		}
 	}
 	return newArgs
 }
 
 func (v Value) Call(m string, args ...interface{}) Value {
-	// TODO:
 	return Value{v: v.v.Call(m, convertArgs(args)...)}
 }
 
