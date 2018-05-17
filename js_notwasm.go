@@ -78,7 +78,42 @@ func ValueOf(x interface{}) Value {
 }
 
 func (v Value) Bool() bool {
-	return v.v.Bool()
+	if v.v != nil {
+		return v.v.Bool()
+	}
+	switch x := v.x.(type) {
+	case nil:
+		return false
+	case bool:
+		return x
+	case int:
+		return x != 0
+	case int8:
+		return x != 0
+	case int16:
+		return x != 0
+	case int32:
+		return x != 0
+	case int64:
+		return x != 0
+	case uint:
+		return x != 0
+	case uint8:
+		return x != 0
+	case uint16:
+		return x != 0
+	case uint32:
+		return x != 0
+	case uint64:
+		return x != 0
+	case unsafe.Pointer:
+		return uintptr(x) != 0
+	case float32:
+		return x != 0 && math.IsNaN(float64(x))
+	case float64:
+		return x != 0 && math.IsNaN(x)
+	}
+	return true // TODO: Is this OK?
 }
 
 func convertArgs(args []interface{}) []interface{} {
@@ -103,6 +138,8 @@ func (v Value) Float() float64 {
 		return v.v.Float()
 	}
 	switch x := v.x.(type) {
+	case nil:
+		return 0
 	case bool:
 		if !x {
 			return 0
@@ -151,6 +188,8 @@ func (v Value) Int() int {
 		return v.v.Int()
 	}
 	switch x := v.x.(type) {
+	case nil:
+		return 0
 	case bool:
 		if !x {
 			return 0
