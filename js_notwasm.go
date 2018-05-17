@@ -259,6 +259,13 @@ func (v Value) String() string {
 		return v.v.String()
 	}
 	switch x := v.x.(type) {
+	case nil:
+		return "null"
+	case bool:
+		if x {
+			return "true"
+		}
+		return "false"
 	case string:
 		return x
 	}
