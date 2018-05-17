@@ -17,6 +17,7 @@
 package js
 
 import (
+	"math"
 	"unsafe"
 
 	"github.com/gopherjs/gopherjs/js"
@@ -28,16 +29,12 @@ var (
 	Global    = Value{v: js.Global}
 )
 
-type Callback func([]*js.Object)
+type Callback struct {
+	f func([]Value)
+}
 
 func NewCallback(f func([]Value)) Callback {
-	return func(arguments []*js.Object) {
-		args := []Value{}
-		for _, arg := range arguments {
-			args = append(args, Value{v: arg})
-		}
-		f(args)
-	}
+	return Callback{f: f}
 }
 
 func (c Callback) Dispose() {
@@ -53,14 +50,28 @@ func (e Error) Error() string {
 
 type Value struct {
 	v *js.Object
+	x interface{}
 }
 
 func ValueOf(x interface{}) Value {
 	switch x := x.(type) {
 	case Value:
 		return x
-	case nil, bool, int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, unsafe.Pointer, float32, float64, string, []byte:
-		return Value{v: js.InternalObject(x)}
+	case Callback:
+		return Value{
+			v: js.MakeFunc(func(this *js.Object, arguments []*js.Object) interface{} {
+				args := []Value{}
+				for _, arg := range arguments {
+					args = append(args, ValueOf(arg.Interface()))
+				}
+				x.f(args)
+				return nil
+			}),
+		}
+	case nil:
+		return Null
+	case bool, int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, unsafe.Pointer, float32, float64, string, []byte:
+		return Value{x: x}
 	default:
 		panic("invalid arg")
 	}
@@ -73,13 +84,11 @@ func (v Value) Bool() bool {
 func convertArgs(args []interface{}) []interface{} {
 	newArgs := []interface{}{}
 	for _, arg := range args {
-		switch arg := arg.(type) {
-		case Value:
-			newArgs = append(newArgs, arg.v)
-		case nil, bool, int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, unsafe.Pointer, float32, float64, string, []byte:
-			newArgs = append(newArgs, arg)
-		default:
-			panic("invalid arg")
+		v := ValueOf(arg)
+		if v.v != nil {
+			newArgs = append(newArgs, v.v)
+		} else {
+			newArgs = append(newArgs, v.x)
 		}
 	}
 	return newArgs
@@ -90,7 +99,43 @@ func (v Value) Call(m string, args ...interface{}) Value {
 }
 
 func (v Value) Float() float64 {
-	return v.v.Float()
+	if v.v != nil {
+		return v.v.Float()
+	}
+	switch x := v.x.(type) {
+	case bool:
+		if !x {
+			return 0
+		}
+		return 1
+	case int:
+		return float64(x)
+	case int8:
+		return float64(x)
+	case int16:
+		return float64(x)
+	case int32:
+		return float64(x)
+	case int64:
+		return float64(x)
+	case uint:
+		return float64(x)
+	case uint8:
+		return float64(x)
+	case uint16:
+		return float64(x)
+	case uint32:
+		return float64(x)
+	case uint64:
+		return float64(x)
+	case unsafe.Pointer:
+		return float64(uintptr(x))
+	case float32:
+		return float64(x)
+	case float64:
+		return x
+	}
+	return math.NaN()
 }
 
 func (v Value) Get(p string) Value {
@@ -102,7 +147,43 @@ func (v Value) Index(i int) Value {
 }
 
 func (v Value) Int() int {
-	return v.v.Int()
+	if v.v != nil {
+		return v.v.Int()
+	}
+	switch x := v.x.(type) {
+	case bool:
+		if !x {
+			return 0
+		}
+		return 1
+	case int:
+		return x
+	case int8:
+		return int(x)
+	case int16:
+		return int(x)
+	case int32:
+		return int(x)
+	case int64:
+		return int(x)
+	case uint:
+		return int(x)
+	case uint8:
+		return int(x)
+	case uint16:
+		return int(x)
+	case uint32:
+		return int(x)
+	case uint64:
+		return int(x)
+	case unsafe.Pointer:
+		return int(uintptr(x))
+	case float32:
+		return int(x)
+	case float64:
+		return int(x)
+	}
+	return 0
 }
 
 func (v Value) Invoke(args ...interface{}) Value {
@@ -110,7 +191,16 @@ func (v Value) Invoke(args ...interface{}) Value {
 }
 
 func (v Value) Length() int {
-	return v.v.Length()
+	if v.v != nil {
+		return v.v.Length()
+	}
+	switch x := v.x.(type) {
+	case string:
+		return len(x)
+	case []byte:
+		return len(x)
+	}
+	return 0
 }
 
 func (v Value) New(args ...interface{}) Value {
@@ -126,6 +216,12 @@ func (v Value) SetIndex(i int, x interface{}) {
 }
 
 func (v Value) String() string {
-	return v.v.String()
+	if v.v != nil {
+		return v.v.String()
+	}
+	switch x := v.x.(type) {
+	case string:
+		return x
+	}
+	return "" // TODO
 }
-

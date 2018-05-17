@@ -27,3 +27,17 @@ func TestNull(t *testing.T) {
 	}
 }
 
+func TestCallback(t *testing.T) {
+	ch := make(chan int)
+	c := js.NewCallback(func(args []js.Value) {
+		ch <- args[0].Int() + args[1].Int()
+	})
+	defer c.Dispose()
+
+	js.ValueOf(c).Invoke(1, 2)
+	got := <-ch
+	want := 3
+	if got != want {
+		t.Errorf("got %#v, want %#v", got, want)
+	}
+}
