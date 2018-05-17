@@ -17,6 +17,7 @@
 package js
 
 import (
+	"fmt"
 	"math"
 	"unsafe"
 
@@ -266,6 +267,10 @@ func (v Value) String() string {
 			return "true"
 		}
 		return "false"
+	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, unsafe.Pointer:
+		return fmt.Sprintf("%d", x) // TODO: Is this correct?
+	case float32, float64:
+		return fmt.Sprintf("%f", x) // TODO: Is this correct?
 	case string:
 		return x
 	}
