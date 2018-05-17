@@ -43,3 +43,11 @@ func TestCallback(t *testing.T) {
 		t.Errorf("got %#v, want %#v", got, want)
 	}
 }
+
+func TestString(t *testing.T) {
+	obj := js.Global.Call("eval", "'Hello'")
+	got := obj.String()
+	if want := "Hello"; got != want {
+		t.Errorf("got %#v, want %#v", got, want)
+	}
+}
