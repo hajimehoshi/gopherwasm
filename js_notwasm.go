@@ -64,11 +64,15 @@ func ValueOf(x interface{}) Value {
 	case Callback:
 		return Value{
 			v: js.MakeFunc(func(this *js.Object, arguments []*js.Object) interface{} {
-				args := []Value{}
-				for _, arg := range arguments {
-					args = append(args, ValueOf(arg.Interface()))
-				}
-				x.f(args)
+				// Call the function asyncly to emulate Wasm's Callback more
+				// precisely.
+				go func() {
+					args := []Value{}
+					for _, arg := range arguments {
+						args = append(args, ValueOf(arg.Interface()))
+					}
+					x.f(args)
+				}()
 				return nil
 			}),
 		}

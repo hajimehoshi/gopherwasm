@@ -31,9 +31,7 @@ func TestNull(t *testing.T) {
 func TestCallback(t *testing.T) {
 	ch := make(chan int)
 	c := js.NewCallback(func(args []js.Value) {
-		go func() {
-			ch <- args[0].Int() + args[1].Int()
-		}()
+		ch <- args[0].Int() + args[1].Int()
 	})
 	defer c.Dispose()
 
