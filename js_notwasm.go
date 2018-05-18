@@ -17,8 +17,6 @@
 package js
 
 import (
-	"fmt"
-	"math"
 	"unsafe"
 
 	"github.com/gopherjs/gopherjs/js"
@@ -51,8 +49,11 @@ func (e Error) Error() string {
 
 type Value struct {
 	v *js.Object
-	x interface{}
 }
+
+var (
+	id = js.Global.Call("eval", "(function(x) { return x; })")
+)
 
 func ValueOf(x interface{}) Value {
 	switch x := x.(type) {
@@ -72,60 +73,24 @@ func ValueOf(x interface{}) Value {
 	case nil:
 		return Null
 	case bool, int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, unsafe.Pointer, float32, float64, string, []byte:
-		return Value{x: x}
+		return Value{v: id.Invoke(x)}
+	case interface{}:
+		println(x)
+		panic("invalid arg")
 	default:
 		panic("invalid arg")
 	}
 }
 
 func (v Value) Bool() bool {
-	if v.v != nil {
-		return v.v.Bool()
-	}
-	switch x := v.x.(type) {
-	case nil:
-		return false
-	case bool:
-		return x
-	case int:
-		return x != 0
-	case int8:
-		return x != 0
-	case int16:
-		return x != 0
-	case int32:
-		return x != 0
-	case int64:
-		return x != 0
-	case uint:
-		return x != 0
-	case uint8:
-		return x != 0
-	case uint16:
-		return x != 0
-	case uint32:
-		return x != 0
-	case uint64:
-		return x != 0
-	case unsafe.Pointer:
-		return uintptr(x) != 0
-	case float32:
-		return x != 0 && math.IsNaN(float64(x))
-	case float64:
-		return x != 0 && math.IsNaN(x)
-	}
-	return true // TODO: Is this OK?
+	return v.v.Bool()
 }
 
 func convertArgs(args []interface{}) []interface{} {
 	newArgs := []interface{}{}
 	for _, arg := range args {
 		v := ValueOf(arg)
-		if v.v != nil {
-			newArgs = append(newArgs, v.v)
-		} else {
-			newArgs = append(newArgs, v.x)
-		}
+		newArgs = append(newArgs, v.v)
 	}
 	return newArgs
 }
@@ -135,45 +100,7 @@ func (v Value) Call(m string, args ...interface{}) Value {
 }
 
 func (v Value) Float() float64 {
-	if v.v != nil {
-		return v.v.Float()
-	}
-	switch x := v.x.(type) {
-	case nil:
-		return 0
-	case bool:
-		if !x {
-			return 0
-		}
-		return 1
-	case int:
-		return float64(x)
-	case int8:
-		return float64(x)
-	case int16:
-		return float64(x)
-	case int32:
-		return float64(x)
-	case int64:
-		return float64(x)
-	case uint:
-		return float64(x)
-	case uint8:
-		return float64(x)
-	case uint16:
-		return float64(x)
-	case uint32:
-		return float64(x)
-	case uint64:
-		return float64(x)
-	case unsafe.Pointer:
-		return float64(uintptr(x))
-	case float32:
-		return float64(x)
-	case float64:
-		return x
-	}
-	return math.NaN()
+	return v.v.Float()
 }
 
 func (v Value) Get(p string) Value {
@@ -181,49 +108,12 @@ func (v Value) Get(p string) Value {
 }
 
 func (v Value) Index(i int) Value {
+	// TODO: []byte
 	return Value{v: v.v.Index(i)}
 }
 
 func (v Value) Int() int {
-	if v.v != nil {
-		return v.v.Int()
-	}
-	switch x := v.x.(type) {
-	case nil:
-		return 0
-	case bool:
-		if !x {
-			return 0
-		}
-		return 1
-	case int:
-		return x
-	case int8:
-		return int(x)
-	case int16:
-		return int(x)
-	case int32:
-		return int(x)
-	case int64:
-		return int(x)
-	case uint:
-		return int(x)
-	case uint8:
-		return int(x)
-	case uint16:
-		return int(x)
-	case uint32:
-		return int(x)
-	case uint64:
-		return int(x)
-	case unsafe.Pointer:
-		return int(uintptr(x))
-	case float32:
-		return int(x)
-	case float64:
-		return int(x)
-	}
-	return 0
+	return v.v.Int()
 }
 
 func (v Value) Invoke(args ...interface{}) Value {
@@ -231,16 +121,7 @@ func (v Value) Invoke(args ...interface{}) Value {
 }
 
 func (v Value) Length() int {
-	if v.v != nil {
-		return v.v.Length()
-	}
-	switch x := v.x.(type) {
-	case string:
-		return len(x)
-	case []byte:
-		return len(x)
-	}
-	return 0
+	return v.v.Length()
 }
 
 func (v Value) New(args ...interface{}) Value {
@@ -252,27 +133,10 @@ func (v Value) Set(p string, x interface{}) {
 }
 
 func (v Value) SetIndex(i int, x interface{}) {
+	// TODO: []byte
 	v.v.SetIndex(i, x)
 }
 
 func (v Value) String() string {
-	if v.v != nil {
-		return v.v.String()
-	}
-	switch x := v.x.(type) {
-	case nil:
-		return "null"
-	case bool:
-		if x {
-			return "true"
-		}
-		return "false"
-	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, unsafe.Pointer:
-		return fmt.Sprintf("%d", x) // TODO: Is this correct?
-	case float32, float64:
-		return fmt.Sprintf("%f", x) // TODO: Is this correct?
-	case string:
-		return x
-	}
-	return "" // TODO
+	return v.v.String()
 }
