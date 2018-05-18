@@ -15,6 +15,7 @@
 package js_test
 
 import (
+	"math"
 	"testing"
 
 	"github.com/hajimehoshi/gopherwasm"
@@ -48,6 +49,14 @@ func TestString(t *testing.T) {
 	obj := js.Global.Call("eval", "'Hello'")
 	got := obj.String()
 	if want := "Hello"; got != want {
+		t.Errorf("got %#v, want %#v", got, want)
+	}
+}
+
+func TestInt64(t *testing.T) {
+	var i int64 = math.MaxInt64
+	got := js.ValueOf(i).String()
+	if want := "9223372036854775807"; got != want {
 		t.Errorf("got %#v, want %#v", got, want)
 	}
 }
