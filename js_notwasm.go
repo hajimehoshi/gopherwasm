@@ -74,9 +74,6 @@ func ValueOf(x interface{}) Value {
 		return Null
 	case bool, int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, unsafe.Pointer, float32, float64, string, []byte:
 		return Value{v: id.Invoke(x)}
-	case interface{}:
-		println(x)
-		panic("invalid arg")
 	default:
 		panic("invalid arg")
 	}
