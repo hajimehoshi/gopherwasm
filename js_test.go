@@ -33,7 +33,7 @@ func TestCallback(t *testing.T) {
 	c := js.NewCallback(func(args []js.Value) {
 		ch <- args[0].Int() + args[1].Int()
 	})
-	defer c.Dispose()
+	defer c.Close()
 
 	js.ValueOf(c).Invoke(1, 2)
 	got := <-ch

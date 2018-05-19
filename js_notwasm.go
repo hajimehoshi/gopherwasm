@@ -37,7 +37,7 @@ func NewCallback(f func([]Value)) Callback {
 	return Callback{f: f}
 }
 
-func (c Callback) Dispose() {
+func (c Callback) Close() {
 }
 
 type Error struct {
