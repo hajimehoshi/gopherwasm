@@ -17,7 +17,6 @@
 package js
 
 import (
-	"fmt"
 	"unsafe"
 
 	"github.com/gopherjs/gopherjs/js"
@@ -50,7 +49,6 @@ func (e Error) Error() string {
 
 type Value struct {
 	v *js.Object
-	x interface{}
 }
 
 var (
@@ -78,10 +76,8 @@ func ValueOf(x interface{}) Value {
 		}
 	case nil:
 		return Null
-	case bool, int8, int16, int32, uint8, uint16, uint32, float32, float64, string, []byte:
+	case bool, int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64, unsafe.Pointer, string, []byte:
 		return Value{v: id.Invoke(x)}
-	case int, int64, uint, uint64, unsafe.Pointer:
-		return Value{x: x}
 	default:
 		panic("invalid arg")
 	}
@@ -95,78 +91,32 @@ func convertArgs(args []interface{}) []interface{} {
 	newArgs := []interface{}{}
 	for _, arg := range args {
 		v := ValueOf(arg)
-		if v.x != nil {
-			newArgs = append(newArgs, v.x)
-		} else {
-			newArgs = append(newArgs, v.v)
-		}
+		newArgs = append(newArgs, v.v)
 	}
 	return newArgs
 }
 
 func (v Value) Call(m string, args ...interface{}) Value {
-	if v.x != nil {
-		panic("invalid receiver")
-	}
 	return Value{v: v.v.Call(m, convertArgs(args)...)}
 }
 
 func (v Value) Float() float64 {
-	if v.x != nil {
-		switch x := v.x.(type) {
-		case int:
-			return float64(x)
-		case int64:
-			return float64(x)
-		case uint:
-			return float64(x)
-		case uint64:
-			return float64(x)
-		case unsafe.Pointer:
-			return float64(uintptr(x))
-		}
-		panic("not reached")
-	}
 	return v.v.Float()
 }
 
 func (v Value) Get(p string) Value {
-	if v.x != nil {
-		panic("invalid receiver")
-	}
 	return Value{v: v.v.Get(p)}
 }
 
 func (v Value) Index(i int) Value {
-	if v.x != nil {
-		panic("invalid receiver")
-	}
 	return Value{v: v.v.Index(i)}
 }
 
 func (v Value) Int() int {
-	if v.x != nil {
-		switch x := v.x.(type) {
-		case int:
-			return x
-		case int64:
-			return int(x)
-		case uint:
-			return int(x)
-		case uint64:
-			return int(x)
-		case unsafe.Pointer:
-			return int(uintptr(x))
-		}
-		panic("not reached")
-	}
 	return v.v.Int()
 }
 
 func (v Value) Invoke(args ...interface{}) Value {
-	if v.x != nil {
-		panic("invalid receiver")
-	}
 	return Value{v: v.v.Invoke(convertArgs(args)...)}
 }
 
@@ -175,29 +125,17 @@ func (v Value) Length() int {
 }
 
 func (v Value) New(args ...interface{}) Value {
-	if v.x != nil {
-		panic("invalid receiver")
-	}
 	return Value{v: v.v.New(convertArgs(args)...)}
 }
 
 func (v Value) Set(p string, x interface{}) {
-	if v.x != nil {
-		panic("invalid receiver")
-	}
 	v.v.Set(p, x)
 }
 
 func (v Value) SetIndex(i int, x interface{}) {
-	if v.x != nil {
-		panic("invalid receiver")
-	}
 	v.v.SetIndex(i, x)
 }
 
 func (v Value) String() string {
-	if v.x != nil {
-		return fmt.Sprintf("%v", v.x)
-	}
 	return v.v.String()
 }

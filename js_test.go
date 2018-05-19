@@ -54,7 +54,8 @@ func TestString(t *testing.T) {
 func TestInt64(t *testing.T) {
 	var i int64 = math.MaxInt64
 	got := js.ValueOf(i).String()
-	if want := "9223372036854775807"; got != want {
+	// js.Value keeps the value only in 53-bit precision.
+	if want := "9223372036854776000"; got != want {
 		t.Errorf("got %#v, want %#v", got, want)
 	}
 }
