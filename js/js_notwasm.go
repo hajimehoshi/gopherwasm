@@ -17,6 +17,7 @@
 package js
 
 import (
+	"fmt"
 	"unsafe"
 
 	"github.com/gopherjs/gopherjs/js"
@@ -34,6 +35,23 @@ type Callback struct {
 
 func NewCallback(f func([]Value)) Callback {
 	return Callback{f: f}
+}
+
+func NewEventCallback(preventDefault, stopPropagation, stopImmediatePropagation bool, fn func(event Value)) Callback {
+	f := func(args []Value) {
+		e := args[0]
+		fn(e)
+		if preventDefault {
+			e.Call("preventDefault")
+		}
+		if stopPropagation {
+			e.Call("stopPropagation")
+		}
+		if stopImmediatePropagation {
+			e.Call("stopImmediatePropagation")
+		}
+	}
+	return NewCallback(f)
 }
 
 func (c Callback) Close() {
@@ -79,7 +97,7 @@ func ValueOf(x interface{}) Value {
 	case bool, int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64, unsafe.Pointer, string, []byte:
 		return Value{v: id.Invoke(x)}
 	default:
-		panic("invalid arg")
+		panic(fmt.Sprintf("invalid arg: %T", x))
 	}
 }
 

@@ -32,6 +32,10 @@ func NewCallback(f func([]Value)) Callback {
 	return js.NewCallback(f)
 }
 
+func NewEventCallback(preventDefault, stopPropagation, stopImmediatePropagation bool, fn func(event Value)) Callback {
+	return js.NewEventCallback(preventDefault, stopPropagation, stopImmediatePropagation, fn)
+}
+
 type Error = js.Error
 
 type Value = js.Value
