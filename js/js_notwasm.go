@@ -30,7 +30,10 @@ var (
 )
 
 type Callback struct {
-	f func([]Value)
+	f                        func([]Value)
+	preventDefault           bool
+	stopPropagation          bool
+	stopImmediatePropagation bool
 }
 
 func NewCallback(f func([]Value)) Callback {
@@ -40,18 +43,14 @@ func NewCallback(f func([]Value)) Callback {
 func NewEventCallback(preventDefault, stopPropagation, stopImmediatePropagation bool, fn func(event Value)) Callback {
 	f := func(args []Value) {
 		e := args[0]
-		if preventDefault {
-			e.Call("preventDefault")
-		}
-		if stopPropagation {
-			e.Call("stopPropagation")
-		}
-		if stopImmediatePropagation {
-			e.Call("stopImmediatePropagation")
-		}
 		fn(e)
 	}
-	return NewCallback(f)
+	return Callback{
+		f:                        f,
+		preventDefault:           preventDefault,
+		stopPropagation:          stopPropagation,
+		stopImmediatePropagation: stopImmediatePropagation,
+	}
 }
 
 func (c Callback) Close() {
@@ -86,6 +85,19 @@ func ValueOf(x interface{}) Value {
 	case Callback:
 		return Value{
 			v: js.MakeFunc(func(this *js.Object, arguments []*js.Object) interface{} {
+				if len(arguments) > 0 {
+					e := arguments[0]
+					if x.preventDefault {
+						e.Call("preventDefault")
+					}
+					if x.stopPropagation {
+						e.Call("stopPropagation")
+					}
+					if x.stopImmediatePropagation {
+						e.Call("stopImmediatePropagation")
+					}
+				}
+
 				// Call the function asyncly to emulate Wasm's Callback more
 				// precisely.
 				go func() {
