@@ -40,7 +40,6 @@ func NewCallback(f func([]Value)) Callback {
 func NewEventCallback(preventDefault, stopPropagation, stopImmediatePropagation bool, fn func(event Value)) Callback {
 	f := func(args []Value) {
 		e := args[0]
-		fn(e)
 		if preventDefault {
 			e.Call("preventDefault")
 		}
@@ -50,6 +49,7 @@ func NewEventCallback(preventDefault, stopPropagation, stopImmediatePropagation 
 		if stopImmediatePropagation {
 			e.Call("stopImmediatePropagation")
 		}
+		fn(e)
 	}
 	return NewCallback(f)
 }
