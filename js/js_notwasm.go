@@ -70,8 +70,14 @@ type Value struct {
 }
 
 var (
-	id = js.Global.Call("eval", "(function(x) { return x; })")
+	id *js.Object
 )
+
+func init() {
+	if js.Global != nil {
+		id = js.Global.Call("eval", "(function(x) { return x; })")
+	}
+}
 
 func ValueOf(x interface{}) Value {
 	switch x := x.(type) {
