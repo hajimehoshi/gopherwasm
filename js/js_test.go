@@ -43,6 +43,21 @@ func TestCallback(t *testing.T) {
 	}
 }
 
+func TestCallbackObject(t *testing.T) {
+	ch := make(chan string)
+	c := js.NewCallback(func(args []js.Value) {
+		ch <- args[0].Get("foo").String()
+	})
+	defer c.Close()
+
+	js.ValueOf(c).Invoke(js.Global.Call("eval", `({"foo": "bar"})`))
+	got := <-ch
+	want := "bar"
+	if got != want {
+		t.Errorf("got %#v, want %#v", got, want)
+	}
+}
+
 func TestString(t *testing.T) {
 	obj := js.Global.Call("eval", "'Hello'")
 	got := obj.String()

@@ -103,7 +103,7 @@ func ValueOf(x interface{}) Value {
 				go func() {
 					args := []Value{}
 					for _, arg := range arguments {
-						args = append(args, ValueOf(arg.Interface()))
+						args = append(args, Value{v: arg})
 					}
 					x.f(args)
 				}()
