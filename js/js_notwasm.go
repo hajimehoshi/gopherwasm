@@ -84,9 +84,9 @@ func ValueOf(x interface{}) Value {
 		return x
 	case Callback:
 		return Value{
-			v: js.MakeFunc(func(this *js.Object, arguments []*js.Object) interface{} {
-				if len(arguments) > 0 {
-					e := arguments[0]
+			v: id.Invoke(func(args... *js.Object) {
+				if len(args) > 0 {
+					e := args[0]
 					if x.preventDefault {
 						e.Call("preventDefault")
 					}
@@ -101,13 +101,12 @@ func ValueOf(x interface{}) Value {
 				// Call the function asyncly to emulate Wasm's Callback more
 				// precisely.
 				go func() {
-					args := []Value{}
-					for _, arg := range arguments {
-						args = append(args, Value{v: arg})
+					newArgs := []Value{}
+					for _, arg := range args {
+						newArgs = append(newArgs, Value{v: arg})
 					}
-					x.f(args)
+					x.f(newArgs)
 				}()
-				return nil
 			}),
 		}
 	case nil:
