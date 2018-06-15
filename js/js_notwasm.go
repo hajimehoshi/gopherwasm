@@ -30,26 +30,30 @@ var (
 )
 
 type Callback struct {
-	f                        func([]Value)
-	preventDefault           bool
-	stopPropagation          bool
-	stopImmediatePropagation bool
+	f     func([]Value)
+	flags EventCallbackFlag
 }
+
+type EventCallbackFlag int
+
+const (
+	PreventDefault EventCallbackFlag = 1 << iota
+	StopPropagation
+	StopImmediatePropagation
+)
 
 func NewCallback(f func([]Value)) Callback {
 	return Callback{f: f}
 }
 
-func NewEventCallback(preventDefault, stopPropagation, stopImmediatePropagation bool, fn func(event Value)) Callback {
+func NewEventCallback(flags EventCallbackFlag, fn func(event Value)) Callback {
 	f := func(args []Value) {
 		e := args[0]
 		fn(e)
 	}
 	return Callback{
-		f:                        f,
-		preventDefault:           preventDefault,
-		stopPropagation:          stopPropagation,
-		stopImmediatePropagation: stopImmediatePropagation,
+		f:     f,
+		flags: flags,
 	}
 }
 
@@ -84,16 +88,16 @@ func ValueOf(x interface{}) Value {
 		return x
 	case Callback:
 		return Value{
-			v: id.Invoke(func(args... *js.Object) {
+			v: id.Invoke(func(args ...*js.Object) {
 				if len(args) > 0 {
 					e := args[0]
-					if x.preventDefault {
+					if x.flags&PreventDefault != 0 {
 						e.Call("preventDefault")
 					}
-					if x.stopPropagation {
+					if x.flags&StopPropagation != 0 {
 						e.Call("stopPropagation")
 					}
-					if x.stopImmediatePropagation {
+					if x.flags&StopImmediatePropagation != 0 {
 						e.Call("stopImmediatePropagation")
 					}
 				}
