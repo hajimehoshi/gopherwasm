@@ -17,7 +17,9 @@
 package js
 
 import (
+	"reflect"
 	"syscall/js"
+	"unsafe"
 )
 
 var (
@@ -49,5 +51,44 @@ type Error = js.Error
 type Value = js.Value
 
 func ValueOf(x interface{}) Value {
-	return js.ValueOf(x)
+	var xh *reflect.SliceHeader
+	size := 0
+	switch x := x.(type) {
+	case []int8:
+		size = 1
+		xh = (*reflect.SliceHeader)(unsafe.Pointer(&x))
+	case []int16:
+		size = 2
+		xh = (*reflect.SliceHeader)(unsafe.Pointer(&x))
+	case []int32:
+		size = 4
+		xh = (*reflect.SliceHeader)(unsafe.Pointer(&x))
+	case []int64:
+		size = 8
+		xh = (*reflect.SliceHeader)(unsafe.Pointer(&x))
+	case []uint16:
+		size = 2
+		xh = (*reflect.SliceHeader)(unsafe.Pointer(&x))
+	case []uint32:
+		size = 4
+		xh = (*reflect.SliceHeader)(unsafe.Pointer(&x))
+	case []uint64:
+		size = 8
+		xh = (*reflect.SliceHeader)(unsafe.Pointer(&x))
+	case []float32:
+		size = 4
+		xh = (*reflect.SliceHeader)(unsafe.Pointer(&x))
+	case []float64:
+		size = 8
+		xh = (*reflect.SliceHeader)(unsafe.Pointer(&x))
+	default:
+		return js.ValueOf(x)
+	}
+
+	var b []byte
+	bh := (*reflect.SliceHeader)(unsafe.Pointer(&b))
+	bh.Data = xh.Data
+	bh.Len = xh.Len * size
+	bh.Cap = xh.Cap * size
+	return js.ValueOf(b)
 }
