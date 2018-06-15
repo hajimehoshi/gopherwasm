@@ -40,7 +40,7 @@ func NewCallback(f func([]Value)) Callback {
 	return js.NewCallback(f)
 }
 
-func NewEventCallback(flags EentCallbackFlag, fn func(event Value)) Callback {
+func NewEventCallback(flags EventCallbackFlag, fn func(event Value)) Callback {
 	return js.NewEventCallback(flags, fn)
 }
 
