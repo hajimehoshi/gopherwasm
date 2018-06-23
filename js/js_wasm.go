@@ -92,3 +92,7 @@ func ValueOf(x interface{}) Value {
 	bh.Cap = xh.Cap * size
 	return js.ValueOf(b)
 }
+
+func GetInternalObject(v Value) interface{} {
+	return v
+}

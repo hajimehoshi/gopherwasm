@@ -180,3 +180,7 @@ func (v Value) SetIndex(i int, x interface{}) {
 func (v Value) String() string {
 	return v.v.String()
 }
+
+func GetInternalObject(v Value) interface{} {
+	return v.v
+}
